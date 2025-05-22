@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: May 20, 2025 at 04:38 AM
+-- Generation Time: May 22, 2025 at 08:35 AM
 -- Server version: 9.0.0
 -- PHP Version: 8.3.13
 
@@ -53,11 +53,23 @@ CREATE TABLE `hewan` (
 
 CREATE TABLE `pengambilan_daging` (
   `id_pengambilan` int NOT NULL,
-  `id_user` int NOT NULL,
+  `id_peran` int NOT NULL,
   `jumlah_daging` decimal(5,2) NOT NULL,
   `status` enum('Belum Diambil','Sudah Diambil','') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `qrcode_token` varchar(50) COLLATE utf8mb4_general_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `peran`
+--
+
+CREATE TABLE `peran` (
+  `id_peran` int NOT NULL,
+  `id_user` int DEFAULT NULL,
+  `peran` enum('warga','panitia','berqurban') DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -96,9 +108,7 @@ CREATE TABLE `user` (
   `id_user` int NOT NULL,
   `nama` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `username` varchar(15) COLLATE utf8mb4_general_ci NOT NULL,
-  `password` varchar(15) COLLATE utf8mb4_general_ci NOT NULL,
-  `is_panitia` tinyint NOT NULL,
-  `is_berqurban` tinyint NOT NULL
+  `password` varchar(15) COLLATE utf8mb4_general_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -124,6 +134,13 @@ ALTER TABLE `hewan`
 --
 ALTER TABLE `pengambilan_daging`
   ADD PRIMARY KEY (`id_pengambilan`),
+  ADD KEY `id_user` (`id_peran`) USING BTREE;
+
+--
+-- Indexes for table `peran`
+--
+ALTER TABLE `peran`
+  ADD PRIMARY KEY (`id_peran`),
   ADD KEY `id_user` (`id_user`);
 
 --
@@ -170,6 +187,12 @@ ALTER TABLE `pengambilan_daging`
   MODIFY `id_pengambilan` int NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `peran`
+--
+ALTER TABLE `peran`
+  MODIFY `id_peran` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `qurban`
 --
 ALTER TABLE `qurban`
@@ -202,7 +225,13 @@ ALTER TABLE `detail_qurban`
 -- Constraints for table `pengambilan_daging`
 --
 ALTER TABLE `pengambilan_daging`
-  ADD CONSTRAINT `FK_pengambilan_daging_user` FOREIGN KEY (`id_user`) REFERENCES `user` (`id_user`);
+  ADD CONSTRAINT `FK_pengambilan_daging_peran` FOREIGN KEY (`id_peran`) REFERENCES `peran` (`id_peran`);
+
+--
+-- Constraints for table `peran`
+--
+ALTER TABLE `peran`
+  ADD CONSTRAINT `FK__user` FOREIGN KEY (`id_user`) REFERENCES `user` (`id_user`);
 
 --
 -- Constraints for table `qurban`
