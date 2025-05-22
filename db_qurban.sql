@@ -1,251 +1,115 @@
--- phpMyAdmin SQL Dump
--- version 5.2.0
--- https://www.phpmyadmin.net/
---
--- Host: localhost:3306
--- Generation Time: May 22, 2025 at 08:41 AM
--- Server version: 9.0.0
--- PHP Version: 8.3.13
-
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
-
+-- --------------------------------------------------------
+-- Host:                         127.0.0.1
+-- Server version:               9.0.0 - MySQL Community Server - GPL
+-- Server OS:                    Win64
+-- HeidiSQL Version:             12.1.0.6537
+-- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
+/*!40101 SET NAMES utf8 */;
+/*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
---
--- Database: `db_qurban`
---
 
--- --------------------------------------------------------
+-- Dumping database structure for db_qurban
+CREATE DATABASE IF NOT EXISTS `db_qurban` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+USE `db_qurban`;
 
---
--- Table structure for table `detail_qurban`
---
-
-CREATE TABLE `detail_qurban` (
-  `id_detail_qurban` int NOT NULL,
+-- Dumping structure for table db_qurban.detail_qurban
+CREATE TABLE IF NOT EXISTS `detail_qurban` (
+  `id_detail_qurban` int NOT NULL AUTO_INCREMENT,
   `id_qurban` int NOT NULL,
-  `id_user` int NOT NULL
+  `id_user` int NOT NULL,
+  PRIMARY KEY (`id_detail_qurban`),
+  KEY `id_qurban` (`id_qurban`),
+  KEY `id_user` (`id_user`),
+  CONSTRAINT `FK_detail_qurban_qurban` FOREIGN KEY (`id_qurban`) REFERENCES `qurban` (`id_qurban`),
+  CONSTRAINT `FK_detail_qurban_user` FOREIGN KEY (`id_user`) REFERENCES `user` (`id_user`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- --------------------------------------------------------
+-- Data exporting was unselected.
 
---
--- Table structure for table `hewan`
---
-
-CREATE TABLE `hewan` (
-  `id_hewan` int NOT NULL,
+-- Dumping structure for table db_qurban.hewan
+CREATE TABLE IF NOT EXISTS `hewan` (
+  `id_hewan` int NOT NULL AUTO_INCREMENT,
   `nama_hewan` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
-  `harga` int NOT NULL
+  `harga` int NOT NULL,
+  PRIMARY KEY (`id_hewan`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- --------------------------------------------------------
+-- Data exporting was unselected.
 
---
--- Table structure for table `pengambilan_daging`
---
-
-CREATE TABLE `pengambilan_daging` (
-  `id_pengambilan` int NOT NULL,
+-- Dumping structure for table db_qurban.pengambilan_daging
+CREATE TABLE IF NOT EXISTS `pengambilan_daging` (
+  `id_pengambilan` int NOT NULL AUTO_INCREMENT,
   `id_peran` int NOT NULL,
   `jumlah_daging` decimal(5,2) NOT NULL,
   `status` enum('Belum Diambil','Sudah Diambil','') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `qrcode_token` varchar(50) COLLATE utf8mb4_general_ci NOT NULL
+  `qrcode_token` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  PRIMARY KEY (`id_pengambilan`),
+  KEY `id_user` (`id_peran`) USING BTREE,
+  CONSTRAINT `FK_pengambilan_daging_peran` FOREIGN KEY (`id_peran`) REFERENCES `peran` (`id_peran`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- --------------------------------------------------------
+-- Data exporting was unselected.
 
---
--- Table structure for table `peran`
---
-
-CREATE TABLE `peran` (
-  `id_peran` int NOT NULL,
+-- Dumping structure for table db_qurban.peran
+CREATE TABLE IF NOT EXISTS `peran` (
+  `id_peran` int NOT NULL AUTO_INCREMENT,
   `id_user` int DEFAULT NULL,
-  `peran` enum('warga','panitia','berqurban') DEFAULT NULL
+  `peran` enum('warga','panitia','berqurban') DEFAULT NULL,
+  PRIMARY KEY (`id_peran`),
+  KEY `id_user` (`id_user`),
+  CONSTRAINT `FK__user` FOREIGN KEY (`id_user`) REFERENCES `user` (`id_user`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- --------------------------------------------------------
+-- Data exporting was unselected.
 
---
--- Table structure for table `qurban`
---
-
-CREATE TABLE `qurban` (
-  `id_qurban` int NOT NULL,
+-- Dumping structure for table db_qurban.qurban
+CREATE TABLE IF NOT EXISTS `qurban` (
+  `id_qurban` int NOT NULL AUTO_INCREMENT,
   `id_hewan` int NOT NULL,
-  `biaya_total` int NOT NULL
+  `biaya_total` int NOT NULL,
+  PRIMARY KEY (`id_qurban`),
+  KEY `id_hewan` (`id_hewan`),
+  CONSTRAINT `FK_qurban_hewan` FOREIGN KEY (`id_hewan`) REFERENCES `hewan` (`id_hewan`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- --------------------------------------------------------
+-- Data exporting was unselected.
 
---
--- Table structure for table `transaksi_keuangan`
---
-
-CREATE TABLE `transaksi_keuangan` (
-  `id_transaksi` int NOT NULL,
+-- Dumping structure for table db_qurban.transaksi_keuangan
+CREATE TABLE IF NOT EXISTS `transaksi_keuangan` (
+  `id_transaksi` int NOT NULL AUTO_INCREMENT,
   `tanggal` date NOT NULL,
   `keterangan` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
   `tipe` enum('masuk','keluar') COLLATE utf8mb4_general_ci NOT NULL,
   `jumlah` int DEFAULT NULL,
-  `id_qurban` int DEFAULT NULL
+  `id_qurban` int DEFAULT NULL,
+  PRIMARY KEY (`id_transaksi`),
+  KEY `id_qurban` (`id_qurban`),
+  CONSTRAINT `transaksi_keuangan_ibfk_1` FOREIGN KEY (`id_qurban`) REFERENCES `qurban` (`id_qurban`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- --------------------------------------------------------
+-- Data exporting was unselected.
 
---
--- Table structure for table `user`
---
-
-CREATE TABLE `user` (
-  `id_user` int NOT NULL,
+-- Dumping structure for table db_qurban.user
+CREATE TABLE IF NOT EXISTS `user` (
+  `id_user` int NOT NULL AUTO_INCREMENT,
   `nama` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   `username` varchar(15) COLLATE utf8mb4_general_ci NOT NULL,
-  `password` varchar(15) COLLATE utf8mb4_general_ci NOT NULL
+  `password` varchar(15) COLLATE utf8mb4_general_ci NOT NULL,
+  PRIMARY KEY (`id_user`) USING BTREE,
+  UNIQUE KEY `username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Indexes for dumped tables
---
+-- Data exporting was unselected.
 
---
--- Indexes for table `detail_qurban`
---
-ALTER TABLE `detail_qurban`
-  ADD PRIMARY KEY (`id_detail_qurban`),
-  ADD KEY `id_qurban` (`id_qurban`),
-  ADD KEY `id_user` (`id_user`);
-
---
--- Indexes for table `hewan`
---
-ALTER TABLE `hewan`
-  ADD PRIMARY KEY (`id_hewan`);
-
---
--- Indexes for table `pengambilan_daging`
---
-ALTER TABLE `pengambilan_daging`
-  ADD PRIMARY KEY (`id_pengambilan`),
-  ADD KEY `id_user` (`id_peran`) USING BTREE;
-
---
--- Indexes for table `peran`
---
-ALTER TABLE `peran`
-  ADD PRIMARY KEY (`id_peran`),
-  ADD KEY `id_user` (`id_user`);
-
---
--- Indexes for table `qurban`
---
-ALTER TABLE `qurban`
-  ADD PRIMARY KEY (`id_qurban`),
-  ADD KEY `id_hewan` (`id_hewan`);
-
---
--- Indexes for table `transaksi_keuangan`
---
-ALTER TABLE `transaksi_keuangan`
-  ADD PRIMARY KEY (`id_transaksi`),
-  ADD KEY `id_qurban` (`id_qurban`);
-
---
--- Indexes for table `user`
---
-ALTER TABLE `user`
-  ADD PRIMARY KEY (`id_user`) USING BTREE,
-  ADD UNIQUE KEY `username` (`username`);
-
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `detail_qurban`
---
-ALTER TABLE `detail_qurban`
-  MODIFY `id_detail_qurban` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `hewan`
---
-ALTER TABLE `hewan`
-  MODIFY `id_hewan` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `pengambilan_daging`
---
-ALTER TABLE `pengambilan_daging`
-  MODIFY `id_pengambilan` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `peran`
---
-ALTER TABLE `peran`
-  MODIFY `id_peran` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `qurban`
---
-ALTER TABLE `qurban`
-  MODIFY `id_qurban` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `transaksi_keuangan`
---
-ALTER TABLE `transaksi_keuangan`
-  MODIFY `id_transaksi` int NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `user`
---
-ALTER TABLE `user`
-  MODIFY `id_user` int NOT NULL AUTO_INCREMENT;
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `detail_qurban`
---
-ALTER TABLE `detail_qurban`
-  ADD CONSTRAINT `FK_detail_qurban_qurban` FOREIGN KEY (`id_qurban`) REFERENCES `qurban` (`id_qurban`),
-  ADD CONSTRAINT `FK_detail_qurban_user` FOREIGN KEY (`id_user`) REFERENCES `user` (`id_user`);
-
---
--- Constraints for table `pengambilan_daging`
---
-ALTER TABLE `pengambilan_daging`
-  ADD CONSTRAINT `FK_pengambilan_daging_peran` FOREIGN KEY (`id_peran`) REFERENCES `peran` (`id_peran`);
-
---
--- Constraints for table `peran`
---
-ALTER TABLE `peran`
-  ADD CONSTRAINT `FK__user` FOREIGN KEY (`id_user`) REFERENCES `user` (`id_user`);
-
---
--- Constraints for table `qurban`
---
-ALTER TABLE `qurban`
-  ADD CONSTRAINT `FK_qurban_hewan` FOREIGN KEY (`id_hewan`) REFERENCES `hewan` (`id_hewan`);
-
---
--- Constraints for table `transaksi_keuangan`
---
-ALTER TABLE `transaksi_keuangan`
-  ADD CONSTRAINT `transaksi_keuangan_ibfk_1` FOREIGN KEY (`id_qurban`) REFERENCES `qurban` (`id_qurban`);
-COMMIT;
-
+/*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
+/*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
+/*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=IFNULL(@OLD_SQL_NOTES, 1) */;
