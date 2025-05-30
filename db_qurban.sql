@@ -29,9 +29,16 @@ CREATE TABLE IF NOT EXISTS `pengambilan_daging` (
   PRIMARY KEY (`id_pengambilan`),
   KEY `id_user` (`id_peran`) USING BTREE,
   CONSTRAINT `FK_pengambilan_daging_peran` FOREIGN KEY (`id_peran`) REFERENCES `peran` (`id_peran`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table db_qurban.pengambilan_daging: ~6 rows (approximately)
+INSERT INTO `pengambilan_daging` (`id_pengambilan`, `id_peran`, `jumlah_daging`, `status`, `qrcode_token`) VALUES
+	(1, 1, 1.00, 'Belum Diambil', 'qwert'),
+	(2, 2, 2.00, 'Belum Diambil', 'pooiuy'),
+	(3, 3, 1.00, 'Belum Diambil', 'asddag'),
+	(4, 4, 1.50, 'Belum Diambil', 'mnbvc'),
+	(5, 5, 1.00, 'Belum Diambil', 'lkjhgf'),
+	(6, 6, 1.00, 'Belum Diambil', 'sdfghjj');
 
 -- Dumping structure for table db_qurban.peran
 CREATE TABLE IF NOT EXISTS `peran` (
@@ -41,9 +48,16 @@ CREATE TABLE IF NOT EXISTS `peran` (
   PRIMARY KEY (`id_peran`),
   KEY `id_user` (`id_user`),
   CONSTRAINT `FK__user` FOREIGN KEY (`id_user`) REFERENCES `user` (`id_user`) ON DELETE RESTRICT
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table db_qurban.peran: ~6 rows (approximately)
+INSERT INTO `peran` (`id_peran`, `id_user`, `peran`) VALUES
+	(1, 1, 'warga'),
+	(2, 2, 'berqurban'),
+	(3, 2, 'warga'),
+	(4, 3, 'panitia'),
+	(5, 3, 'warga'),
+	(6, 11, 'warga');
 
 -- Dumping structure for table db_qurban.transaksi_keuangan
 CREATE TABLE IF NOT EXISTS `transaksi_keuangan` (
@@ -57,7 +71,7 @@ CREATE TABLE IF NOT EXISTS `transaksi_keuangan` (
   KEY `id_qurban` (`id_peran`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table db_qurban.transaksi_keuangan: ~0 rows (approximately)
 
 -- Dumping structure for table db_qurban.user
 CREATE TABLE IF NOT EXISTS `user` (
@@ -67,9 +81,14 @@ CREATE TABLE IF NOT EXISTS `user` (
   PRIMARY KEY (`id_user`) USING BTREE,
   KEY `nik` (`nik`),
   CONSTRAINT `FK_user_warga` FOREIGN KEY (`nik`) REFERENCES `warga` (`nik`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table db_qurban.user: ~4 rows (approximately)
+INSERT INTO `user` (`id_user`, `nik`, `password`) VALUES
+	(1, '1989', '123'),
+	(2, '1990', '123'),
+	(3, '1991', '123'),
+	(11, '1992', '123');
 
 -- Dumping structure for table db_qurban.warga
 CREATE TABLE IF NOT EXISTS `warga` (
@@ -80,15 +99,20 @@ CREATE TABLE IF NOT EXISTS `warga` (
   PRIMARY KEY (`nik`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Data exporting was unselected.
+-- Dumping data for table db_qurban.warga: ~0 rows (approximately)
+INSERT INTO `warga` (`nik`, `nama`, `asal`, `pekerjaan`) VALUES
+	('1989', 'Budi', 'Malang', 'Arsitek'),
+	('1990', 'Toni', 'Pasuruan', 'Guru'),
+	('1991', 'Doni', 'Sidoarjo', 'Pedagang'),
+	('1992', 'Ari', 'Gresik', 'Buruh');
 
 -- Dumping structure for trigger db_qurban.peran
 SET @OLDTMP_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 DELIMITER //
 CREATE TRIGGER `peran` AFTER INSERT ON `user` FOR EACH ROW BEGIN
 	INSERT INTO peran
-	(nik, peran) VALUES
-	(NEW.nik, 'warga');
+	(id_user, peran) VALUES
+	(NEW.id_user, 'warga');
 END//
 DELIMITER ;
 SET SQL_MODE=@OLDTMP_SQL_MODE;

@@ -106,7 +106,7 @@ if ($can_manage) {
     <div class="row mb-4">
         <h5>Manajemen Data</h5>
         <div class="col-md-6"><a href="transaksi.php" class="btn btn-outline-success w-100">Transaksi</a></div>
-        <div class="col-md-6"><a href="pengambilan.php" class="btn btn-outline-info w-100">Distribusi Daging</a></div>
+        <div class="col-md-6    "><a href="pengambilan.php" class="btn btn-outline-info w-100">Distribusi Daging</a></div>
     </div>
 
     <hr>
@@ -115,8 +115,8 @@ if ($can_manage) {
     <!-- Admin: Hapus Data Warga pada Manajemen Data -->
     <div class="row mb-4">
         <h5>Manajemen Data</h5>
-        <div class="col-md-3"><a href="transaksi.php" class="btn btn-outline-success w-100">Transaksi</a></div>
-        <div class="col-md-3"><a href="pengambilan.php" class="btn btn-outline-info w-100">Distribusi Daging</a></div>
+        <div class="col-md-6"><a href="transaksi.php" class="btn btn-outline-success w-100">Transaksi</a></div>
+        <div class="col-md-6"><a href="pengambilan.php" class="btn btn-outline-info w-100">Distribusi Daging</a></div>
     </div>
     <?php endif; ?>
 
