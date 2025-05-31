@@ -125,10 +125,11 @@ if ($can_manage) {
     <h4>QR Code Pengambilan Daging</h4>
 
     <?php
-        $sql = "SELECT pd.qrcode_token, pd.status, p.peran 
+        $sql = "SELECT pd.qrcode_token, pd.status, p.peran,
+                pd.jumlah_daging 
                 FROM pengambilan_daging pd
                 INNER JOIN peran p ON pd.id_peran = p.id_peran
-                WHERE p.id_user = ?";
+                WHERE p.id_user = ? AND pd.status = 'Belum Diambil'";
         $stmt = $koneksi->prepare($sql);
         $stmt->bind_param("i", $id_user);
         $stmt->execute();
@@ -145,7 +146,7 @@ if ($can_manage) {
             <div class="col-md-4">
                 <div class="card p-3 text-center shadow-sm">
                     <p>Peran: <?= $data_qr['peran'] ?></p>
-                    <p>Status: <?= $data_qr['status'] ?></p>
+                    <p>Daging: <?= $data_qr['jumlah_daging'] ?> Kg</p>
                     <img src="<?= $url ?>" alt="QR Code">
                     <a href="<?= $url ?>" class="btn btn-sm btn-primary mt-2" download="qr_<?= $data_qr['peran'] ?>_<?= $username ?>.png">Unduh QR</a>
                 </div>
