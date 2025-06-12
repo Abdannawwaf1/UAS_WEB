@@ -34,4 +34,4 @@ $user = $_SESSION['user'];
 $id_user = $user['id_user'];
 $username = $user['username'];
 
-generate_user_qr($id_user, $username, $koneksi);
+// generate_user_qr($id_user, $username, $koneksi);

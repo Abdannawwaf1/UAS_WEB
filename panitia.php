@@ -11,7 +11,7 @@ $user = $_SESSION['user'];
 $roles = $user['role'];
 $is_admin = in_array('admin', $roles);
 
-// Hanya admin & panitia yang bisa mengakses
+// Hanya admin yang bisa mengakses
 if (!$is_admin) {
     echo "<div style='padding:20px'><h4>Akses ditolak. Halaman ini hanya untuk admin dan panitia.</h4></div>";
     exit();
@@ -56,13 +56,13 @@ $result = $koneksi->query($sql);
 
 // Ambil semua warga yang belum jadi panitia (untuk pilihan tambah)
 $warga_sql = "SELECT w.nik, w.nama FROM warga w
-              INNER JOIN user u ON w.nik = u.nik
-              WHERE w.nik NOT IN (
+                INNER JOIN user u ON w.nik = u.nik
+                WHERE w.nik NOT IN (
                 SELECT u2.nik FROM peran p2
                 INNER JOIN user u2 ON p2.id_user = u2.id_user
                 WHERE p2.peran = 'panitia'
-              )
-              ORDER BY w.nama ASC";
+                )
+                ORDER BY w.nama ASC";
 $warga_result = $koneksi->query($warga_sql);
 ?>
 
@@ -71,7 +71,7 @@ $warga_result = $koneksi->query($warga_sql);
 <head>
     <meta charset="UTF-8">
     <title>Data Panitia</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/bootstrap.css" media="all" rel="stylesheet">
 </head>
 <body class="bg-light">
 <div class="container mt-4">

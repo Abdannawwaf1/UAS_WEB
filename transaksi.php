@@ -26,11 +26,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah'])) {
     $tipe = $_POST['tipe'];
     $jumlah = $_POST['jumlah'];
 
-    $stmt = $koneksi->prepare("INSERT INTO transaksi_keuangan (nik, tanggal, keterangan, tipe, jumlah) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssi", $nik, $tanggal, $keterangan, $tipe, $jumlah);
-    $stmt->execute();
-    header("Location: transaksi.php");
-    exit();
+    // Cek jika keterangan mengandung "qurban" (case-insensitive), pastikan warga belum punya role berqurban
+    if (stripos($keterangan, 'qurban') !== false) {
+        // Cari id_user dari nik
+        $stmt_user = $koneksi->prepare("SELECT id_user FROM user WHERE nik = ?");
+        $stmt_user->bind_param("s", $nik);
+        $stmt_user->execute();
+        $res_user = $stmt_user->get_result();
+        if ($res_user->num_rows > 0) {
+            $id_user = $res_user->fetch_assoc()['id_user'];
+            $stmt_peran = $koneksi->prepare("SELECT 1 FROM peran WHERE id_user = ? AND peran = 'berqurban' LIMIT 1");
+            $stmt_peran->bind_param("i", $id_user);
+            $stmt_peran->execute();
+            $stmt_peran->store_result();
+            if ($stmt_peran->num_rows > 0) {
+                $error_qurban = "Warga ini sudah memiliki role berqurban, tidak dapat menambah transaksi dengan keterangan yang mengandung kata 'qurban'.";
+            } else {
+                $stmt = $koneksi->prepare("INSERT INTO transaksi_keuangan (nik, tanggal, keterangan, tipe, jumlah) VALUES (?, ?, ?, ?, ?)");
+                $stmt->bind_param("ssssi", $nik, $tanggal, $keterangan, $tipe, $jumlah);
+                $stmt->execute();
+                header("Location: transaksi.php");
+                exit();
+            }
+        } else {
+            $error_qurban = "User tidak ditemukan.";
+        }
+    } else {
+        $stmt = $koneksi->prepare("INSERT INTO transaksi_keuangan (nik, tanggal, keterangan, tipe, jumlah) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssi", $nik, $tanggal, $keterangan, $tipe, $jumlah);
+        $stmt->execute();
+        header("Location: transaksi.php");
+        exit();
+    }
 }
 
 // Edit transaksi
@@ -64,7 +91,7 @@ $sql = "SELECT t.*, w.nama FROM transaksi_keuangan t
 $result = $koneksi->query($sql);
 
 // Ambil semua warga untuk pilihan NIK
-$warga_result = $koneksi->query("SELECT nik, nama FROM warga ORDER BY nama ASC");
+$warga_result = $koneksi->query("SELECT w.nik, w.nama FROM warga w INNER JOIN user u ON w.nik = u.nik ORDER BY w.nama ASC");
 
 // Untuk edit, ambil data transaksi yang dipilih
 $edit_transaksi = null;
@@ -82,7 +109,7 @@ if (isset($_GET['edit']) && ($is_admin || $is_panitia)) {
 <head>
     <meta charset="UTF-8">
     <title>Data Transaksi Keuangan</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/bootstrap.css" media="all" rel="stylesheet">
 </head>
 <body class="bg-light">
 <div class="container mt-4">
@@ -96,6 +123,9 @@ if (isset($_GET['edit']) && ($is_admin || $is_panitia)) {
     <div class="card mb-4">
         <div class="card-header"><?= $edit_transaksi ? 'Edit Transaksi' : 'Tambah Transaksi' ?></div>
         <div class="card-body">
+            <?php if (isset($error_qurban)): ?>
+                <div class="alert alert-danger"><?= htmlspecialchars($error_qurban) ?></div>
+            <?php endif; ?>
             <form method="post">
                 <?php if ($edit_transaksi): ?>
                     <input type="hidden" name="id_transaksi" value="<?= $edit_transaksi['id_transaksi'] ?>">

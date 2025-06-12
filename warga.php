@@ -11,7 +11,7 @@ $user = $_SESSION['user'];
 $roles = $user['role'];
 $is_admin = in_array('admin', $roles);
 
-// Hanya admin & panitia yang bisa mengakses
+// Hanya admin yang bisa mengakses
 if (!$is_admin) {
     echo "<div style='padding:20px'><h4>Akses ditolak. Halaman ini hanya untuk admin dan panitia.</h4></div>";
     exit();
@@ -75,7 +75,7 @@ if (isset($_GET['edit']) && $is_admin) {
 <head>
     <meta charset="UTF-8">
     <title>Data Warga</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/bootstrap.css" media="all" rel="stylesheet">
 </head>
 <body class="bg-light">
 <div class="container mt-4">

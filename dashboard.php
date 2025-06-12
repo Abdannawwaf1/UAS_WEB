@@ -11,24 +11,10 @@ $user = $_SESSION['user'];
 $id_user = $user['id_user'];
 $nama = $user['nama'];
 $username = $user['username'];
+$roles = $user['role'];
 
-// Generate QR Code otomatis (kecuali admin)
-if ($username !== 'admin') {
-    require_once 'generate_qr.php';
-    generate_user_qr($id_user, $username, $koneksi);
-}
-
-// Ambil semua peran user
-$roles = [];
-
-if ($username === 'admin') {
-    $roles[] = 'admin';
-} else {
-    $result_roles = $koneksi->query("SELECT peran FROM peran WHERE id_user = $id_user");
-    while ($r = $result_roles->fetch_assoc()) {
-        $roles[] = $r['peran'];
-    }
-}
+require_once 'generate_qr.php';
+generate_user_qr($id_user, $username, $koneksi);
 
 $is_admin = in_array('admin', $roles);
 $is_panitia = in_array('panitia', $roles);
@@ -51,13 +37,13 @@ if ($can_manage) {
 <head>
     <meta charset="UTF-8">
     <title>Dashboard | Qurban</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/bootstrap.css" media="all" rel="stylesheet">
 </head>
 <body class="bg-light">
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center">
         <h3>Halo, <?= htmlspecialchars($nama) ?></h3>
-        <a href="login.php" class="btn btn-danger">Logout</a>
+        <a href="logout.php" class="btn btn-danger">Logout</a>
     </div>
     <hr>
 
@@ -105,25 +91,24 @@ if ($can_manage) {
     </div>
     <div class="row mb-4">
         <h5>Manajemen Data</h5>
-        <div class="col-md-6"><a href="transaksi.php" class="btn btn-outline-success w-100">Transaksi</a></div>
+        <div class="col-md-6"><a href="transaksi.php" class="btn btn-outline-success w-100">Transaksi Keuangan</a></div>
         <div class="col-md-6    "><a href="pengambilan.php" class="btn btn-outline-info w-100">Distribusi Daging</a></div>
     </div>
 
     <hr>
     <?php elseif ($is_panitia): ?>
     <!-- Panitia: Tampilkan Manajemen Data -->
-    <!-- Admin: Hapus Data Warga pada Manajemen Data -->
     <div class="row mb-4">
         <h5>Manajemen Data</h5>
-        <div class="col-md-6"><a href="transaksi.php" class="btn btn-outline-success w-100">Transaksi</a></div>
+        <div class="col-md-6"><a href="transaksi.php" class="btn btn-outline-success w-100">Transaksi Keuangan</a></div>
         <div class="col-md-6"><a href="pengambilan.php" class="btn btn-outline-info w-100">Distribusi Daging</a></div>
     </div>
     <?php endif; ?>
 
     <!-- TAMPILAN QR UNTUK SEMUA PERAN (ADMIN & LAINNYA) -->
+    <?php if (!$is_admin): ?>
     <hr>
     <h4>QR Code Pengambilan Daging</h4>
-
     <?php
         $sql = "SELECT pd.qrcode_token, pd.status, p.peran,
                 pd.jumlah_daging 
@@ -134,7 +119,6 @@ if ($can_manage) {
         $stmt->bind_param("i", $id_user);
         $stmt->execute();
         $res = $stmt->get_result();
-
         if ($res->num_rows > 0):
     ?>
         <div class="row">
@@ -155,6 +139,7 @@ if ($can_manage) {
         </div>
     <?php else: ?>
         <div class="alert alert-warning">QR Code tidak ditemukan untuk akun ini.</div>
+    <?php endif; ?>
     <?php endif; ?>
 </div>
 </body>

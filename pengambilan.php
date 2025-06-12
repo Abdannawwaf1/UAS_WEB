@@ -27,7 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit'])) {
     $jumlah_daging = $_POST['jumlah_daging'];
     $status = $_POST['status'];
     $qrcode_token = $_POST['qrcode_token'];
-
     $stmt = $koneksi->prepare("UPDATE pengambilan_daging SET jumlah_daging=?, status=?, qrcode_token=? WHERE id_pengambilan=?");
     $stmt->bind_param("dssi", $jumlah_daging, $status, $qrcode_token, $id_pengambilan);
     $stmt->execute();
@@ -78,7 +77,7 @@ if (isset($_GET['edit']) && ($is_admin || $is_panitia)) {
 <head>
     <meta charset="UTF-8">
     <title>Data Pengambilan Daging</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/bootstrap.css" media="all" rel="stylesheet">
 </head>
 <body class="bg-light">
 <div class="container mt-4">
