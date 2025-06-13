@@ -24,34 +24,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah'])) {
     $keterangan = $_POST['keterangan'];
     $tipe = $_POST['tipe'];
     $jumlah = $_POST['jumlah'];
-
-    // Cek jika keterangan mengandung "qurban" (case-insensitive), pastikan warga belum punya role berqurban
-    // if (stripos($keterangan, 'qurban') !== false) {
-    //     // Cari nik dari nik
-    //     $stmt_user = $koneksi->prepare("SELECT nik FROM user WHERE nik = ?");
-    //     $stmt_user->bind_param("s", $nik);
-    //     $stmt_user->execute();
-    //     $res_user = $stmt_user->get_result();
-    //     if ($res_user->num_rows > 0) {
-    //         $nik = $res_user->fetch_assoc()['nik'];
-    //         $stmt_peran = $koneksi->prepare("SELECT 1 FROM peran WHERE nik = ? AND peran = 'berqurban' LIMIT 1");
-    //         $stmt_peran->bind_param("i", $nik);
-    //         $stmt_peran->execute();
-    //         $stmt_peran->store_result();
-    //         if ($stmt_peran->num_rows > 0) {
-    //             $error_qurban = "Warga ini sudah memiliki role berqurban, tidak dapat menambah transaksi dengan keterangan yang mengandung kata 'qurban'.";
-    //         } else {
-    //             $stmt = $koneksi->prepare("INSERT INTO transaksi_keuangan (nik, tanggal, keterangan, tipe, jumlah) VALUES (?, ?, ?, ?, ?)");
-    //             $stmt->bind_param("ssssi", $nik, $tanggal, $keterangan, $tipe, $jumlah);
-    //             $stmt->execute();
-    //             header("Location: transaksi.php");
-    //             exit();
-    //         }
-    //     } else {
-    //         $error_qurban = "User tidak ditemukan.";
-    //     }
-    // } else {
-        // Cari id_peran dari nik (ambil salah satu peran, misal peran 'berqurban', 'panitia', atau 'warga')
         $stmt_peran = $koneksi->prepare("SELECT id_peran FROM peran WHERE nik = ? LIMIT 1");
         $stmt_peran->bind_param("s", $nik);
         $stmt_peran->execute();
@@ -66,7 +38,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah'])) {
         $stmt->execute();
         header("Location: transaksi.php");
         exit();
-    // }
 }
 
 // Edit transaksi
@@ -78,8 +49,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit'])) {
     $tipe = $_POST['tipe'];
     $jumlah = $_POST['jumlah'];
 
-    $stmt = $koneksi->prepare("UPDATE transaksi_keuangan SET nik=?, tanggal=?, keterangan=?, tipe=?, jumlah=? WHERE id_transaksi=?");
-    $stmt->bind_param("ssssii", $nik, $tanggal, $keterangan, $tipe, $jumlah, $id_transaksi);
+    // Cari id_peran dari nik
+    $stmt_peran = $koneksi->prepare("SELECT id_peran FROM peran WHERE nik = ? LIMIT 1");
+    $stmt_peran->bind_param("s", $nik);
+    $stmt_peran->execute();
+    $res_peran = $stmt_peran->get_result();
+    $id_peran = null;
+    if ($res_peran->num_rows > 0) {
+        $id_peran = $res_peran->fetch_assoc()['id_peran'];
+    }
+
+    $stmt = $koneksi->prepare("UPDATE transaksi_keuangan SET id_peran=?, tanggal=?, keterangan=?, tipe=?, jumlah=? WHERE id_transaksi=?");
+    $stmt->bind_param("isssii", $id_peran, $tanggal, $keterangan, $tipe, $jumlah, $id_transaksi);
     $stmt->execute();
     header("Location: transaksi.php");
     exit();
@@ -115,7 +96,13 @@ $warga_result = $koneksi->query("
 $edit_transaksi = null;
 if (isset($_GET['edit']) && $is_admin) {
     $id_edit = intval($_GET['edit']);
-    $res_edit = $koneksi->query("SELECT * FROM transaksi_keuangan WHERE id_transaksi=$id_edit");
+    // Ambil data transaksi beserta nik dari tabel peran
+    $res_edit = $koneksi->query(
+        "SELECT t.*, p.nik 
+         FROM transaksi_keuangan t
+         LEFT JOIN peran p ON t.id_peran = p.id_peran
+         WHERE t.id_transaksi = $id_edit"
+    );
     if ($res_edit->num_rows > 0) {
         $edit_transaksi = $res_edit->fetch_assoc();
     }
@@ -167,7 +154,7 @@ if (isset($_GET['edit']) && $is_admin) {
                         <label for="tanggal">Tanggal</label>
                         <input type="date" name="tanggal" class="form-control" required value="<?= $edit_transaksi ? $edit_transaksi['tanggal'] : '' ?>">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label for="keterangan">Keterangan</label>
                         <input type="text" name="keterangan" class="form-control" required value="<?= $edit_transaksi ? htmlspecialchars($edit_transaksi['keterangan']) : '' ?>">
                     </div>
@@ -183,7 +170,7 @@ if (isset($_GET['edit']) && $is_admin) {
                         <label for="jumlah">Jumlah</label>
                         <input type="number" name="jumlah" class="form-control" required value="<?= $edit_transaksi ? $edit_transaksi['jumlah'] : '' ?>">
                     </div>
-                    <div class="col-md-1 d-flex align-items-end">
+                    <div class="col-md-2 d-flex align-items-end">
                         <button type="submit" name="<?= $edit_transaksi ? 'edit' : 'tambah' ?>" class="btn btn-success w-100">
                             <?= $edit_transaksi ? 'Simpan' : 'Tambah' ?>
                         </button>

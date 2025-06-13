@@ -33,5 +33,3 @@ if (!isset($_SESSION['user'])) return;
 $user = $_SESSION['user'];
 $nik = $user['nik'];
 $username = $user['username'];
-
-// generate_user_qr($nik, $username, $koneksi);
