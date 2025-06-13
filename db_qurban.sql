@@ -19,6 +19,24 @@
 CREATE DATABASE IF NOT EXISTS `db_qurban` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `db_qurban`;
 
+-- Dumping structure for function db_qurban.generate_qrcode_token
+DELIMITER //
+CREATE FUNCTION `generate_qrcode_token`() RETURNS varchar(50) CHARSET utf8mb4
+    DETERMINISTIC
+BEGIN
+  DECLARE chars VARCHAR(62) DEFAULT 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  DECLARE token VARCHAR(50) DEFAULT '';
+  DECLARE i INT DEFAULT 0;
+
+  WHILE i < 10 DO
+    SET token = CONCAT(token, SUBSTRING(chars, FLOOR(1 + RAND() * 62), 1));
+    SET i = i + 1;
+  END WHILE;
+
+  RETURN token;
+END//
+DELIMITER ;
+
 -- Dumping structure for table db_qurban.pengambilan_daging
 CREATE TABLE IF NOT EXISTS `pengambilan_daging` (
   `id_pengambilan` int NOT NULL AUTO_INCREMENT,
@@ -29,71 +47,40 @@ CREATE TABLE IF NOT EXISTS `pengambilan_daging` (
   PRIMARY KEY (`id_pengambilan`),
   KEY `id_user` (`id_peran`) USING BTREE,
   CONSTRAINT `FK_pengambilan_daging_peran` FOREIGN KEY (`id_peran`) REFERENCES `peran` (`id_peran`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table db_qurban.pengambilan_daging: ~6 rows (approximately)
+-- Dumping data for table db_qurban.pengambilan_daging: ~0 rows (approximately)
 INSERT INTO `pengambilan_daging` (`id_pengambilan`, `id_peran`, `jumlah_daging`, `status`, `qrcode_token`) VALUES
-	(1, 1, 1.00, 'Belum Diambil', 'qwert'),
-	(2, 2, 2.00, 'Belum Diambil', 'pooiuy'),
-	(3, 3, 1.00, 'Belum Diambil', 'asddag'),
-	(4, 4, 1.50, 'Belum Diambil', 'mnbvc'),
-	(5, 5, 1.00, 'Belum Diambil', 'lkjhgf'),
-	(6, 6, 1.00, 'Belum Diambil', 'sdfghjj');
+	(45, 50, 2.00, 'Belum Diambil', 'UbP3vGP3uD');
 
 -- Dumping structure for table db_qurban.peran
 CREATE TABLE IF NOT EXISTS `peran` (
   `id_peran` int NOT NULL AUTO_INCREMENT,
-  `id_user` int DEFAULT NULL,
+  `nik` varchar(50) DEFAULT NULL,
   `peran` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   PRIMARY KEY (`id_peran`),
-  KEY `id_user` (`id_user`),
-  CONSTRAINT `FK__user` FOREIGN KEY (`id_user`) REFERENCES `user` (`id_user`) ON DELETE RESTRICT
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `id_user` (`nik`) USING BTREE,
+  CONSTRAINT `FK_peran_warga` FOREIGN KEY (`nik`) REFERENCES `warga` (`nik`)
+) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table db_qurban.peran: ~7 rows (approximately)
-INSERT INTO `peran` (`id_peran`, `id_user`, `peran`) VALUES
-	(1, 1, 'warga'),
-	(2, 2, 'berqurban'),
-	(3, 2, 'warga'),
-	(4, 3, 'panitia'),
-	(5, 3, 'warga'),
-	(6, 11, 'warga'),
-	(11, 11, 'berqurban');
+-- Dumping data for table db_qurban.peran: ~1 rows (approximately)
+INSERT INTO `peran` (`id_peran`, `nik`, `peran`) VALUES
+	(50, 'admin', 'admin');
 
 -- Dumping structure for table db_qurban.transaksi_keuangan
 CREATE TABLE IF NOT EXISTS `transaksi_keuangan` (
   `id_transaksi` int NOT NULL AUTO_INCREMENT,
-  `nik` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `id_peran` int DEFAULT NULL,
   `tanggal` date NOT NULL,
   `keterangan` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
   `tipe` enum('masuk','keluar') COLLATE utf8mb4_general_ci NOT NULL,
   `jumlah` int DEFAULT NULL,
   PRIMARY KEY (`id_transaksi`),
-  KEY `id_qurban` (`nik`) USING BTREE,
-  CONSTRAINT `FK_transaksi_keuangan_warga` FOREIGN KEY (`nik`) REFERENCES `warga` (`nik`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  KEY `id_qurban` (`id_peran`) USING BTREE,
+  CONSTRAINT `FK_transaksi_keuangan_peran` FOREIGN KEY (`id_peran`) REFERENCES `peran` (`id_peran`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table db_qurban.transaksi_keuangan: ~2 rows (approximately)
-INSERT INTO `transaksi_keuangan` (`id_transaksi`, `nik`, `tanggal`, `keterangan`, `tipe`, `jumlah`) VALUES
-	(1, '1990', '2025-05-31', 'Qurban Sapi', 'masuk', 3000000),
-	(2, '1992', '2025-05-31', 'Qurban Kambing', 'masuk', 2700000);
-
--- Dumping structure for table db_qurban.user
-CREATE TABLE IF NOT EXISTS `user` (
-  `id_user` int NOT NULL AUTO_INCREMENT,
-  `nik` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `password` varchar(15) COLLATE utf8mb4_general_ci NOT NULL,
-  PRIMARY KEY (`id_user`) USING BTREE,
-  KEY `nik` (`nik`),
-  CONSTRAINT `FK_user_warga` FOREIGN KEY (`nik`) REFERENCES `warga` (`nik`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- Dumping data for table db_qurban.user: ~0 rows (approximately)
-INSERT INTO `user` (`id_user`, `nik`, `password`) VALUES
-	(1, '1989', '123'),
-	(2, '1990', '123'),
-	(3, '1991', '123'),
-	(11, '1992', '123');
+-- Dumping data for table db_qurban.transaksi_keuangan: ~0 rows (approximately)
 
 -- Dumping structure for table db_qurban.warga
 CREATE TABLE IF NOT EXISTS `warga` (
@@ -101,15 +88,38 @@ CREATE TABLE IF NOT EXISTS `warga` (
   `nama` varchar(50) DEFAULT NULL,
   `asal` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `pekerjaan` varchar(50) DEFAULT NULL,
+  `password` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`nik`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table db_qurban.warga: ~0 rows (approximately)
-INSERT INTO `warga` (`nik`, `nama`, `asal`, `pekerjaan`) VALUES
-	('1989', 'Budi', 'Malang', 'Arsitek'),
-	('1990', 'Toni', 'Pasuruan', 'Guru'),
-	('1991', 'Doni', 'Sidoarjo', 'Pedagang'),
-	('1992', 'Ari', 'Gresik', 'Buruh');
+-- Dumping data for table db_qurban.warga: ~1 rows (approximately)
+INSERT INTO `warga` (`nik`, `nama`, `asal`, `pekerjaan`, `password`) VALUES
+	('admin', 'administrator', NULL, NULL, 'admin123');
+
+-- Dumping structure for trigger db_qurban.pengambilan_daging
+SET @OLDTMP_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+DELIMITER //
+CREATE TRIGGER `pengambilan_daging` AFTER INSERT ON `peran` FOR EACH ROW BEGIN
+  DECLARE v_jumlah_daging DECIMAL(5,2);
+
+  -- Tentukan jumlah daging berdasarkan peran
+  IF NEW.peran = 'warga' THEN
+    SET v_jumlah_daging = 2.00;
+  ELSEIF NEW.peran = 'panitia' THEN
+    SET v_jumlah_daging = 2.00;
+  ELSEIF NEW.peran = 'berqurban' THEN
+    SET v_jumlah_daging = 4.00;
+  ELSE
+    SET v_jumlah_daging = 0.00;
+  END IF;
+
+  -- Insert ke pengambilan_daging dengan token acak
+  INSERT INTO pengambilan_daging (id_peran, jumlah_daging, status, qrcode_token)
+  VALUES (NEW.id_peran, v_jumlah_daging, 'Belum Diambil', generate_qrcode_token());
+
+END//
+DELIMITER ;
+SET SQL_MODE=@OLDTMP_SQL_MODE;
 
 -- Dumping structure for trigger db_qurban.peran_berqurban
 SET @OLDTMP_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
@@ -147,10 +157,10 @@ SET SQL_MODE=@OLDTMP_SQL_MODE;
 -- Dumping structure for trigger db_qurban.peran_warga
 SET @OLDTMP_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 DELIMITER //
-CREATE TRIGGER `peran_warga` AFTER INSERT ON `user` FOR EACH ROW BEGIN
+CREATE TRIGGER `peran_warga` AFTER INSERT ON `warga` FOR EACH ROW BEGIN
 	INSERT INTO peran
-	(id_user, peran) VALUES
-	(NEW.id_user, 'warga');
+	(nik, peran) VALUES
+	(NEW.nik, 'warga');
 END//
 DELIMITER ;
 SET SQL_MODE=@OLDTMP_SQL_MODE;

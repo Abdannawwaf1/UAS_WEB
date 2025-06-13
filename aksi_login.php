@@ -6,21 +6,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nik = $_POST['nik'];
     $password = $_POST['password'];
     // Cek admin hardcoded
-    if ($nik === 'admin' && $password === 'admin123') {
-        $_SESSION['user'] = [
-            'id_user' => 0,
-            'nama' => 'Administrator',
-            'username' => 'admin',
-            'role' => ['admin']
-        ];
-        header("Location: dashboard.php");
-        exit();
-    }
+    // if ($nik === 'admin' && $password === 'admin123') {
+    //     $_SESSION['user'] = [
+    //         'nik' => 0,
+    //         'nama' => 'Administrator',
+    //         'username' => 'admin',
+    //         'role' => ['admin']
+    //     ];
+    //     header("Location: dashboard.php");
+    //     exit();
+    // }
 
     // Ambil user dari tabel user berdasarkan NIK
-    $sql = "SELECT u.*, w.nama FROM user u 
-            LEFT JOIN warga w ON u.nik = w.nik 
-            WHERE u.nik = ?";
+    $sql = "SELECT nama, nik, password FROM warga
+            WHERE nik = ?";
     $stmt = $koneksi->prepare($sql);
     $stmt->bind_param("s", $nik);
     $stmt->execute();
@@ -30,27 +29,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $data = $res->fetch_assoc();
         // Validasi password
         if ($password === $data['password']) {
-            $id_user = $data['id_user'];
-            $peran_result = $koneksi->query("SELECT peran FROM peran WHERE id_user = $id_user");
+            $nik = $data['nik'];
+            $peran_result = $koneksi->query("SELECT peran FROM peran WHERE nik = '$nik'");
             $roles = [];
             while ($r = $peran_result->fetch_assoc()) {
                 $roles[] = $r['peran'];
             }
             $_SESSION['user'] = [
-                'id_user' => $data['id_user'],
+                'nik' => $data['nik'],
                 'nama' => $data['nama'],
                 'username' => $data['nik'], // gunakan nik sebagai username
-                'role' => $roles,
+                'role' => $roles
             ];
 
             header("Location: dashboard.php");
             exit();
-        } else {
+        } 
+        else {
             $error = "Password salah.";
             alert($error);
         }
-    } else {
-        $error = "NIK / Password salah.";
+    } 
+    else {
+        $error = "NIK salah.";
         alert($error);
     }
 }

@@ -2,13 +2,13 @@
 require_once 'asset/qrcode/qrlib.php';
 include_once 'koneksi.php';
 
-function generate_user_qr($id_user, $username, $koneksi) {
+function generate_user_qr($nik, $username, $koneksi) {
     $sql = "SELECT pd.qrcode_token, p.peran 
             FROM pengambilan_daging pd
             INNER JOIN peran p ON pd.id_peran = p.id_peran
-            WHERE p.id_user = ?";
+            WHERE p.nik = ?";
     $stmt = $koneksi->prepare($sql);
-    $stmt->bind_param("i", $id_user);
+    $stmt->bind_param("i", $nik);
     $stmt->execute();
     $res = $stmt->get_result();
 
@@ -31,7 +31,7 @@ if (!isset($_SESSION)) session_start();
 if (!isset($_SESSION['user'])) return;
 
 $user = $_SESSION['user'];
-$id_user = $user['id_user'];
+$nik = $user['nik'];
 $username = $user['username'];
 
-// generate_user_qr($id_user, $username, $koneksi);
+// generate_user_qr($nik, $username, $koneksi);

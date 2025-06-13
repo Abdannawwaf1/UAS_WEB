@@ -20,18 +20,15 @@ if (!$is_admin) {
 // Tambah panitia
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah'])) {
     $nik = $_POST['nik'];
-    // Cari id_user dari nik
-    $stmt = $koneksi->prepare("SELECT id_user FROM user WHERE nik = ?");
-    $stmt->bind_param("s", $nik);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    if ($res->num_rows > 0) {
-        $id_user = $res->fetch_assoc()['id_user'];
-        // Cek apakah sudah jadi panitia
-        $cek = $koneksi->query("SELECT * FROM peran WHERE id_user=$id_user AND peran='panitia'");
-        if ($cek->num_rows == 0) {
-            $koneksi->query("INSERT INTO peran (id_user, peran) VALUES ($id_user, 'panitia')");
-        }
+    // Cek apakah sudah jadi panitia
+    $cek = $koneksi->prepare("SELECT 1 FROM peran WHERE nik = ? AND peran = 'panitia' LIMIT 1");
+    $cek->bind_param("s", $nik);
+    $cek->execute();
+    $cek->store_result();
+    if ($cek->num_rows == 0) {
+        $stmt = $koneksi->prepare("INSERT INTO peran (nik, peran) VALUES (?, 'panitia')");
+        $stmt->bind_param("s", $nik);
+        $stmt->execute();
     }
     header("Location: panitia.php");
     exit();
@@ -40,6 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah'])) {
 // Hapus panitia
 if (isset($_GET['hapus']) && $is_admin) {
     $id_peran = intval($_GET['hapus']);
+    // Hapus data pada pengambilan_daging yang memiliki id_peran yang sama
+    $koneksi->query("DELETE FROM pengambilan_daging WHERE id_peran = $id_peran");
     $koneksi->query("DELETE FROM peran WHERE id_peran=$id_peran AND peran='panitia'");
     header("Location: panitia.php");
     exit();
@@ -48,19 +47,19 @@ if (isset($_GET['hapus']) && $is_admin) {
 // Ambil data panitia
 $sql = "SELECT p.id_peran, w.nik, w.nama, w.asal, w.pekerjaan, p.peran
         FROM peran p
-        INNER JOIN user u ON p.id_user = u.id_user
-        INNER JOIN warga w ON u.nik = w.nik
+        INNER JOIN warga w ON p.nik = w.nik
         WHERE p.peran = 'panitia'
         ORDER BY w.nama ASC";
 $result = $koneksi->query($sql);
 
 // Ambil semua warga yang belum jadi panitia (untuk pilihan tambah)
-$warga_sql = "SELECT w.nik, w.nama FROM warga w
-                INNER JOIN user u ON w.nik = u.nik
+$warga_sql = "SELECT w.nik, w.nama 
+                FROM warga w
                 WHERE w.nik NOT IN (
-                SELECT u2.nik FROM peran p2
-                INNER JOIN user u2 ON p2.id_user = u2.id_user
-                WHERE p2.peran = 'panitia'
+                    SELECT p.nik FROM peran p WHERE p.peran = 'panitia'
+                )
+                AND w.nik NOT IN (
+                    SELECT p.nik FROM peran p WHERE p.peran = 'admin'
                 )
                 ORDER BY w.nama ASC";
 $warga_result = $koneksi->query($warga_sql);

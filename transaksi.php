@@ -10,10 +10,9 @@ if (!isset($_SESSION['user'])) {
 $user = $_SESSION['user'];
 $roles = $user['role'];
 $is_admin = in_array('admin', $roles);
-$is_panitia = in_array('panitia', $roles);
 
-// Hanya admin & panitia yang bisa mengakses
-if (!$is_admin && !$is_panitia) {
+// Hanya admin yang bisa mengakses
+if (!$is_admin) {
     echo "<div style='padding:20px'><h4>Akses ditolak. Halaman ini hanya untuk admin dan panitia.</h4></div>";
     exit();
 }
@@ -27,37 +26,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah'])) {
     $jumlah = $_POST['jumlah'];
 
     // Cek jika keterangan mengandung "qurban" (case-insensitive), pastikan warga belum punya role berqurban
-    if (stripos($keterangan, 'qurban') !== false) {
-        // Cari id_user dari nik
-        $stmt_user = $koneksi->prepare("SELECT id_user FROM user WHERE nik = ?");
-        $stmt_user->bind_param("s", $nik);
-        $stmt_user->execute();
-        $res_user = $stmt_user->get_result();
-        if ($res_user->num_rows > 0) {
-            $id_user = $res_user->fetch_assoc()['id_user'];
-            $stmt_peran = $koneksi->prepare("SELECT 1 FROM peran WHERE id_user = ? AND peran = 'berqurban' LIMIT 1");
-            $stmt_peran->bind_param("i", $id_user);
-            $stmt_peran->execute();
-            $stmt_peran->store_result();
-            if ($stmt_peran->num_rows > 0) {
-                $error_qurban = "Warga ini sudah memiliki role berqurban, tidak dapat menambah transaksi dengan keterangan yang mengandung kata 'qurban'.";
-            } else {
-                $stmt = $koneksi->prepare("INSERT INTO transaksi_keuangan (nik, tanggal, keterangan, tipe, jumlah) VALUES (?, ?, ?, ?, ?)");
-                $stmt->bind_param("ssssi", $nik, $tanggal, $keterangan, $tipe, $jumlah);
-                $stmt->execute();
-                header("Location: transaksi.php");
-                exit();
-            }
-        } else {
-            $error_qurban = "User tidak ditemukan.";
+    // if (stripos($keterangan, 'qurban') !== false) {
+    //     // Cari nik dari nik
+    //     $stmt_user = $koneksi->prepare("SELECT nik FROM user WHERE nik = ?");
+    //     $stmt_user->bind_param("s", $nik);
+    //     $stmt_user->execute();
+    //     $res_user = $stmt_user->get_result();
+    //     if ($res_user->num_rows > 0) {
+    //         $nik = $res_user->fetch_assoc()['nik'];
+    //         $stmt_peran = $koneksi->prepare("SELECT 1 FROM peran WHERE nik = ? AND peran = 'berqurban' LIMIT 1");
+    //         $stmt_peran->bind_param("i", $nik);
+    //         $stmt_peran->execute();
+    //         $stmt_peran->store_result();
+    //         if ($stmt_peran->num_rows > 0) {
+    //             $error_qurban = "Warga ini sudah memiliki role berqurban, tidak dapat menambah transaksi dengan keterangan yang mengandung kata 'qurban'.";
+    //         } else {
+    //             $stmt = $koneksi->prepare("INSERT INTO transaksi_keuangan (nik, tanggal, keterangan, tipe, jumlah) VALUES (?, ?, ?, ?, ?)");
+    //             $stmt->bind_param("ssssi", $nik, $tanggal, $keterangan, $tipe, $jumlah);
+    //             $stmt->execute();
+    //             header("Location: transaksi.php");
+    //             exit();
+    //         }
+    //     } else {
+    //         $error_qurban = "User tidak ditemukan.";
+    //     }
+    // } else {
+        // Cari id_peran dari nik (ambil salah satu peran, misal peran 'berqurban', 'panitia', atau 'warga')
+        $stmt_peran = $koneksi->prepare("SELECT id_peran FROM peran WHERE nik = ? LIMIT 1");
+        $stmt_peran->bind_param("s", $nik);
+        $stmt_peran->execute();
+        $res_peran = $stmt_peran->get_result();
+        $id_peran = null;
+        if ($res_peran->num_rows > 0) {
+            $id_peran = $res_peran->fetch_assoc()['id_peran'];
         }
-    } else {
-        $stmt = $koneksi->prepare("INSERT INTO transaksi_keuangan (nik, tanggal, keterangan, tipe, jumlah) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssi", $nik, $tanggal, $keterangan, $tipe, $jumlah);
+
+        $stmt = $koneksi->prepare("INSERT INTO transaksi_keuangan (id_peran, tanggal, keterangan, tipe, jumlah) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("isssi", $id_peran, $tanggal, $keterangan, $tipe, $jumlah);
         $stmt->execute();
         header("Location: transaksi.php");
         exit();
-    }
+    // }
 }
 
 // Edit transaksi
@@ -77,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit'])) {
 }
 
 // Hapus transaksi
-if (isset($_GET['hapus']) && ($is_admin || $is_panitia)) {
+if (isset($_GET['hapus']) && $is_admin) {
     $id_transaksi = intval($_GET['hapus']);
     $koneksi->query("DELETE FROM transaksi_keuangan WHERE id_transaksi=$id_transaksi");
     header("Location: transaksi.php");
@@ -85,17 +94,26 @@ if (isset($_GET['hapus']) && ($is_admin || $is_panitia)) {
 }
 
 // Ambil data transaksi (join ke warga untuk dapat nama)
-$sql = "SELECT t.*, w.nama FROM transaksi_keuangan t
-        LEFT JOIN warga w ON t.nik = w.nik
+$sql = "SELECT t.*, w.nama 
+        FROM transaksi_keuangan t
+        LEFT JOIN peran p ON t.id_peran = p.id_peran
+        LEFT JOIN warga w ON p.nik = w.nik
         ORDER BY t.tanggal DESC, t.id_transaksi DESC";
 $result = $koneksi->query($sql);
 
 // Ambil semua warga untuk pilihan NIK
-$warga_result = $koneksi->query("SELECT w.nik, w.nama FROM warga w INNER JOIN user u ON w.nik = u.nik ORDER BY w.nama ASC");
+$warga_result = $koneksi->query("
+    SELECT w.nik, w.nama 
+    FROM warga w
+    INNER JOIN peran p ON w.nik = p.nik
+    WHERE p.peran IN ('admin', 'berqurban')
+    GROUP BY w.nik
+    ORDER BY w.nama ASC
+");
 
 // Untuk edit, ambil data transaksi yang dipilih
 $edit_transaksi = null;
-if (isset($_GET['edit']) && ($is_admin || $is_panitia)) {
+if (isset($_GET['edit']) && $is_admin) {
     $id_edit = intval($_GET['edit']);
     $res_edit = $koneksi->query("SELECT * FROM transaksi_keuangan WHERE id_transaksi=$id_edit");
     if ($res_edit->num_rows > 0) {
@@ -156,6 +174,7 @@ if (isset($_GET['edit']) && ($is_admin || $is_panitia)) {
                     <div class="col-md-2">
                         <label for="tipe">Tipe</label>
                         <select name="tipe" class="form-select" required>
+                            <option value="">-- Pilih Tipe --</option>
                             <option value="masuk" <?= ($edit_transaksi && $edit_transaksi['tipe'] == 'masuk') ? 'selected' : '' ?>>Masuk</option>
                             <option value="keluar" <?= ($edit_transaksi && $edit_transaksi['tipe'] == 'keluar') ? 'selected' : '' ?>>Keluar</option>
                         </select>

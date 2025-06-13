@@ -8,13 +8,13 @@ if (!isset($_SESSION['user'])) {
 include 'koneksi.php';
 
 $user = $_SESSION['user'];
-$id_user = $user['id_user'];
+$nik = $user['nik'];
 $nama = $user['nama'];
 $username = $user['username'];
 $roles = $user['role'];
 
 require_once 'generate_qr.php';
-generate_user_qr($id_user, $username, $koneksi);
+generate_user_qr($nik, $username, $koneksi);
 
 $is_admin = in_array('admin', $roles);
 $is_panitia = in_array('panitia', $roles);
@@ -100,8 +100,7 @@ if ($can_manage) {
     <!-- Panitia: Tampilkan Manajemen Data -->
     <div class="row mb-4">
         <h5>Manajemen Data</h5>
-        <div class="col-md-6"><a href="transaksi.php" class="btn btn-outline-success w-100">Transaksi Keuangan</a></div>
-        <div class="col-md-6"><a href="pengambilan.php" class="btn btn-outline-info w-100">Distribusi Daging</a></div>
+        <div class="col-md-12"><a href="pengambilan.php" class="btn btn-outline-info w-100">Distribusi Daging</a></div>
     </div>
     <?php endif; ?>
 
@@ -114,9 +113,9 @@ if ($can_manage) {
                 pd.jumlah_daging 
                 FROM pengambilan_daging pd
                 INNER JOIN peran p ON pd.id_peran = p.id_peran
-                WHERE p.id_user = ? AND pd.status = 'Belum Diambil'";
+                WHERE p.nik = ? AND pd.status = 'Belum Diambil'";
         $stmt = $koneksi->prepare($sql);
-        $stmt->bind_param("i", $id_user);
+        $stmt->bind_param("i", $nik);
         $stmt->execute();
         $res = $stmt->get_result();
         if ($res->num_rows > 0):

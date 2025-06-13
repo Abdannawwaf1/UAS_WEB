@@ -144,6 +144,7 @@ if (isset($_GET['edit']) && ($is_admin || $is_panitia)) {
         <thead class="table-dark">
             <tr>
                 <th>No</th>
+                <th>Nama</th>
                 <th>Peran</th>
                 <th>Jumlah Daging (kg)</th>
                 <th>Status</th>
@@ -153,9 +154,21 @@ if (isset($_GET['edit']) && ($is_admin || $is_panitia)) {
         </thead>
         <tbody>
             <?php if ($result->num_rows > 0): ?>
-                <?php $no = 1; while ($row = $result->fetch_assoc()): ?>
+                <?php $no = 1; while ($row = $result->fetch_assoc()):
+                    // Ambil nama warga dari tabel warga berdasarkan nik di tabel peran
+                    $nama = '';
+                    $nik = '';
+                    $peran_id = $row['id_peran'];
+                    $res_nama = $koneksi->query("SELECT w.nama, w.nik FROM peran p INNER JOIN warga w ON p.nik = w.nik WHERE p.id_peran = $peran_id LIMIT 1");
+                    if ($res_nama && $res_nama->num_rows > 0) {
+                        $data_nama = $res_nama->fetch_assoc();
+                        $nama = $data_nama['nama'];
+                        $nik = $data_nama['nik'];
+                    }
+                ?>
                 <tr>
                     <td><?= $no++ ?></td>
+                    <td><?= htmlspecialchars($nama) ?></td>
                     <td><?= htmlspecialchars($row['peran']) ?></td>
                     <td><?= htmlspecialchars($row['jumlah_daging']) ?></td>
                     <td><?= htmlspecialchars($row['status']) ?></td>
@@ -167,7 +180,7 @@ if (isset($_GET['edit']) && ($is_admin || $is_panitia)) {
                 </tr>
                 <?php endwhile; ?>
             <?php else: ?>
-                <tr><td colspan="6" class="text-center">Tidak ada data pengambilan daging.</td></tr>
+                <tr><td colspan="7" class="text-center">Tidak ada data pengambilan daging.</td></tr>
             <?php endif; ?>
         </tbody>
     </table>

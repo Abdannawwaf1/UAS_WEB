@@ -56,7 +56,9 @@ if (isset($_GET['hapus']) && $is_admin) {
 }
 
 // Ambil data warga
-$sql = "SELECT * FROM warga ORDER BY nama ASC";
+$sql = "SELECT * FROM warga WHERE nik NOT IN (
+            SELECT nik FROM peran WHERE peran = 'admin'
+        ) ORDER BY nama ASC";
 $result = $koneksi->query($sql);
 
 // Untuk edit, ambil data warga yang dipilih

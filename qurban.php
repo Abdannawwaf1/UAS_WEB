@@ -20,18 +20,15 @@ if (!$is_admin) {
 // Tambah berqurban
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah'])) {
     $nik = $_POST['nik'];
-    // Cari id_user dari nik
-    $stmt = $koneksi->prepare("SELECT id_user FROM user WHERE nik = ?");
-    $stmt->bind_param("s", $nik);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    if ($res->num_rows > 0) {
-        $id_user = $res->fetch_assoc()['id_user'];
-        // Cek apakah sudah jadi berqurban
-        $cek = $koneksi->query("SELECT * FROM peran WHERE id_user=$id_user AND peran='berqurban'");
-        if ($cek->num_rows == 0) {
-            $koneksi->query("INSERT INTO peran (id_user, peran) VALUES ($id_user, 'berqurban')");
-        }
+    // Cek apakah sudah jadi berqurban
+    $cek = $koneksi->prepare("SELECT 1 FROM peran WHERE nik = ? AND peran = 'berqurban' LIMIT 1");
+    $cek->bind_param("s", $nik);
+    $cek->execute();
+    $cek->store_result();
+    if ($cek->num_rows == 0) {
+        $stmt = $koneksi->prepare("INSERT INTO peran (nik, peran) VALUES (?, 'berqurban')");
+        $stmt->bind_param("s", $nik);
+        $stmt->execute();
     }
     header("Location: qurban.php");
     exit();
@@ -40,7 +37,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah'])) {
 // Hapus berqurban
 if (isset($_GET['hapus']) && $is_admin) {
     $id_peran = intval($_GET['hapus']);
-    $koneksi->query("DELETE FROM peran WHERE id_peran=$id_peran AND peran='berqurban'");
+    // Hapus data pada pengambilan_daging yang memiliki id_peran yang sama
+    $koneksi->query("DELETE FROM pengambilan_daging WHERE id_peran = $id_peran");
+    // Hapus data pada peran
+    $koneksi->query("DELETE FROM peran WHERE id_peran = $id_peran AND peran = 'berqurban'");
     header("Location: qurban.php");
     exit();
 }
@@ -48,19 +48,19 @@ if (isset($_GET['hapus']) && $is_admin) {
 // Ambil data berqurban
 $sql = "SELECT p.id_peran, w.nik, w.nama, w.asal, w.pekerjaan, p.peran
         FROM peran p
-        INNER JOIN user u ON p.id_user = u.id_user
-        INNER JOIN warga w ON u.nik = w.nik
+        INNER JOIN warga w ON p.nik = w.nik
         WHERE p.peran = 'berqurban'
         ORDER BY w.nama ASC";
 $result = $koneksi->query($sql);
 
 // Ambil semua warga yang belum jadi berqurban (untuk pilihan tambah)
-$warga_sql = "SELECT w.nik, w.nama FROM warga w
-                INNER JOIN user u ON w.nik = u.nik
+$warga_sql = "SELECT w.nik, w.nama 
+                FROM warga w
                 WHERE w.nik NOT IN (
-                SELECT u2.nik FROM peran p2
-                INNER JOIN user u2 ON p2.id_user = u2.id_user
-                WHERE p2.peran = 'berqurban'
+                    SELECT p.nik FROM peran p WHERE p.peran = 'berqurban'
+                )
+                AND w.nik NOT IN (
+                    SELECT p.nik FROM peran p WHERE p.peran = 'admin'
                 )
                 ORDER BY w.nama ASC";
 $warga_result = $koneksi->query($warga_sql);
@@ -82,7 +82,7 @@ $warga_result = $koneksi->query($warga_sql);
     <hr>
 
     <!-- Form Tambah Berqurban -->
-    <!-- <div class="card mb-4">
+    <div class="card mb-4">
         <div class="card-header">Tambah Warga Berqurban</div>
         <div class="card-body">
             <form method="post">
@@ -93,7 +93,7 @@ $warga_result = $koneksi->query($warga_sql);
                             <option value="">-- Pilih Warga --</option>
                             <?php while ($w = $warga_result->fetch_assoc()): ?>
                                 <option value="<?= $w['nik'] ?>"><?= htmlspecialchars($w['nama']) ?> (<?= $w['nik'] ?>)</option>
-                            <?php endwhile; ?> 
+                            <?php endwhile; ?>
                         </select>
                     </div>
                     <div class="col-md-4 d-flex align-items-end">
@@ -102,7 +102,7 @@ $warga_result = $koneksi->query($warga_sql);
                 </div>
             </form>
         </div>
-    </div> -->
+    </div>
 
     <!-- Tabel Berqurban -->
     <table class="table table-bordered table-striped">
@@ -111,7 +111,7 @@ $warga_result = $koneksi->query($warga_sql);
                 <th>No</th>
                 <th>NIK</th>
                 <th>Nama</th>
-                <th>asal</th>
+                <th>Asal</th>
                 <th>Pekerjaan</th>
                 <th>Peran</th>
                 <?php if ($is_admin): ?>
